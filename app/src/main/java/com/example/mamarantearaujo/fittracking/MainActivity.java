@@ -30,6 +30,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private final String TAG = "Main";
+    private Location mLocation = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +64,8 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(mApiClient, 1000, pendingIntent);
     }
 
+
+
     @Override
     protected void onStop() {
         super.onStop();
@@ -83,21 +86,6 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         enableMyLocation();
-        /*if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            //    public void requestPermissions(@NonNull String[] permissions, int requestCode)
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for Activity#requestPermissions for more details.
-            return;
-        }
-        Location location = LocationServices.FusedLocationApi.getLastLocation(mApiClient);
-
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 17);
-        googleMap.animateCamera(cameraUpdate);*/
     }
 
     private void enableMyLocation() {
@@ -118,8 +106,8 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
             if (permissions.length == 1 &&
                     permissions[0] == Manifest.permission.ACCESS_FINE_LOCATION &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                        ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     //TODO: print an error
                     return;
                 }
@@ -127,4 +115,5 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
             }
         }
     }
+
 }
