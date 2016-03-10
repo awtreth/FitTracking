@@ -116,19 +116,22 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
                 .build();
     }
 
+    private PendingIntent mPendingIntent;
+
     @Override
     public void onConnected(Bundle bundle) {
         Intent intent = new Intent(this, ActivityRecognizedService.class);
-        PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(mApiClient, 2000, pendingIntent);
+        mPendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(mApiClient, 3000, mPendingIntent);
     }
 
 
 
     @Override
     protected void onStop() {
-        super.onStop();
+        ActivityRecognition.ActivityRecognitionApi.removeActivityUpdates(mApiClient, mPendingIntent);
         mApiClient.disconnect();
+        super.onStop();
     }
 
     @Override
@@ -148,14 +151,12 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     }
 
     private void enableMyLocation() {
-        Log.v(TAG, "Entered");
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // Permission to access the location is missing.
             //TODO: print an error
         } else if (mMap != null) {
             // Access to the location has been granted to the app.
-            Log.v(TAG, "enabled");
             mMap.setMyLocationEnabled(true);
         }
     }

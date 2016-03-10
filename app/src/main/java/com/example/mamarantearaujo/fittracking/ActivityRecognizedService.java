@@ -86,7 +86,23 @@ public class ActivityRecognizedService extends IntentService {
             MainActivity.mHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(getApplicationContext(), String.format("Activity %d", finalAct), Toast.LENGTH_LONG).show();
+                    int toastVerbId = 0;
+                    switch(finalAct) {
+                        case DetectedActivity.STILL:
+                            toastVerbId = R.string.still;
+                            break;
+                        case DetectedActivity.WALKING:
+                            toastVerbId = R.string.walked;
+                            break;
+                        case DetectedActivity.IN_VEHICLE:
+                            toastVerbId = R.string.in_vehicle;
+                            break;
+                        case DetectedActivity.RUNNING:
+                            toastVerbId = R.string.run;
+                            break;
+                        default: Log.v(TAG,"NOT SUPPOSED TO BE HERE");
+                    }
+                    //Toast.makeText(getApplicationContext(), String.format(getString(R.string.toast_msg),getString(toastVerbId),"some time"), Toast.LENGTH_LONG).show();
                 }
             });
 
@@ -97,6 +113,5 @@ public class ActivityRecognizedService extends IntentService {
             MainActivity.mHandler.sendMessage(msg);
         }
     }
-
 
 }
