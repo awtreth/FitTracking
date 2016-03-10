@@ -28,6 +28,8 @@ public class ActivityRecognizedService extends IntentService {
     private int lastActivity = DetectedActivity.STILL;
     private final String TAG = "ActivityRecognition";
     private final Integer goalActivities[] = {DetectedActivity.IN_VEHICLE, DetectedActivity.STILL, DetectedActivity.RUNNING, DetectedActivity.WALKING};
+    private Handler mHandler;
+
 
     //Default Constructor
     public ActivityRecognizedService() {
@@ -41,6 +43,14 @@ public class ActivityRecognizedService extends IntentService {
      */
     public ActivityRecognizedService(String name) {
         super(name);
+    }
+
+
+    @Override
+    //It is called in the Activity context
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        mHandler = new Handler();//create a handler of MainActivity
+        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
@@ -71,7 +81,13 @@ public class ActivityRecognizedService extends IntentService {
             updateActivity(act);
         }
 
-        //Toast.makeText(getApplicationContext(), "Hello Toast!", Toast.LENGTH_LONG).show();
+        final int finalAct = act;
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getApplicationContext(), String.format("Activity %d", finalAct), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void updateActivity(int activity) {
