@@ -2,14 +2,18 @@ package com.example.mamarantearaujo.fittracking;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -21,7 +25,9 @@ import java.util.Map;
  */
 public class ActivityRecognizedService extends IntentService {
 
-    private int lastActivity = DetectedActivity.UNKNOWN;
+    private int lastActivity = DetectedActivity.STILL;
+    private final String TAG = "ActivityRecognition";
+    private final Integer goalActivities[] = {DetectedActivity.IN_VEHICLE, DetectedActivity.STILL, DetectedActivity.RUNNING, DetectedActivity.WALKING};
 
     //Default Constructor
     public ActivityRecognizedService() {
@@ -39,17 +45,33 @@ public class ActivityRecognizedService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if(ActivityRecognitionResult.hasResult(intent)) {
+        if (ActivityRecognitionResult.hasResult(intent)) {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
-            handleDetectedActivities( result );
+            handleDetectedActivities(result);
         }
     }
 
     private void handleDetectedActivities(ActivityRecognitionResult result) {
 
-        int activity = result.getMostProbableActivity().getType();
-        //updateActivity(activity);
-        //Toast.makeText(this.getApplicationContext(), String.format("Activity %d", activity), Toast.LENGTH_SHORT).show();
+        Log.v(TAG, "-----------------------------------------------------");
+        int act = 0;
+
+        for (DetectedActivity activity : result.getProbableActivities()) {
+            Log.v(TAG, String.format("Activity %d; Confidence %d", activity.getType(), activity.getConfidence()));
+            if (Arrays.asList(goalActivities).contains(activity.getType())) {
+                act = activity.getType();
+                Log.v(TAG, String.format("THE Activity %d; Confidence %d", activity.getType(), activity.getConfidence()));
+                break;
+            }
+        }
+
+        //int activity = result.getMostProbableActivity().getType();
+        if (act != lastActivity){
+            lastActivity = act;
+            updateActivity(act);
+        }
+
+        //Toast.makeText(getApplicationContext(), "Hello Toast!", Toast.LENGTH_LONG).show();
     }
 
     private void updateActivity(int activity) {
@@ -57,7 +79,7 @@ public class ActivityRecognizedService extends IntentService {
         int toastMsgID = 0;
         int textMsgID = 0;
 
-        switch(activity) {
+        switch (activity) {
             case DetectedActivity.IN_VEHICLE: {
                 imageID = R.drawable.in_vehicle;
                 toastMsgID = R.string.toast_msg;
@@ -78,13 +100,14 @@ public class ActivityRecognizedService extends IntentService {
                 toastMsgID = R.string.toast_msg;
                 break;
             }
-            default: Log.e( "ActivityRecogition", "Not supposed to be here");
+            default:
+                Log.e("ActivityRecogition", "Not supposed to be here");
         }
 
-        Toast.makeText(this, toastMsgID, Toast.LENGTH_SHORT).show();
+        //TextView textView = findViewByID();
+
+        //Toast.makeText(this, toastMsgID, Toast.LENGTH_SHORT).show();
     }
-
-
 
 
 }
