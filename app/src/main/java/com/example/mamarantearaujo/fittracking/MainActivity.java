@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
@@ -32,7 +34,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private final String TAG = "Main";
     private Location mLocation = null;
-
+    public static Handler mHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +44,18 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
                 (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         buildApiClient();
+
+
+        mHandler = new Handler(Looper.getMainLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+                Log.v(TAG,String.format("received msg %d",msg.getData().getInt("Activity")));
+            }
+
+        };
+
+
+
     }
 
     @Override

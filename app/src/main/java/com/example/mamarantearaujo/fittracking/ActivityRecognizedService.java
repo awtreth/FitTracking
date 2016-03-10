@@ -2,7 +2,9 @@ package com.example.mamarantearaujo.fittracking;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
@@ -25,10 +27,10 @@ import java.util.Map;
  */
 public class ActivityRecognizedService extends IntentService {
 
-    private int lastActivity = DetectedActivity.STILL;
+    private int lastActivity = DetectedActivity.UNKNOWN;
     private final String TAG = "ActivityRecognition";
     private final Integer goalActivities[] = {DetectedActivity.IN_VEHICLE, DetectedActivity.STILL, DetectedActivity.RUNNING, DetectedActivity.WALKING};
-    private Handler mHandler;
+    //private Handler mHandler;
 
 
     //Default Constructor
@@ -46,12 +48,12 @@ public class ActivityRecognizedService extends IntentService {
     }
 
 
-    @Override
+    //@Override
     //It is called in the Activity context
-    public int onStartCommand(Intent intent, int flags, int startId) {
+    /*public int onStartCommand(Intent intent, int flags, int startId) {
         mHandler = new Handler();//create a handler of MainActivity
         return super.onStartCommand(intent, flags, startId);
-    }
+    }*/
 
     @Override
     protected void onHandleIntent(Intent intent) {
@@ -63,7 +65,7 @@ public class ActivityRecognizedService extends IntentService {
 
     private void handleDetectedActivities(ActivityRecognitionResult result) {
 
-        Log.v(TAG, "-----------------------------------------------------");
+        Log.v(TAG, String.format("-----Last activity = %d-------------------", lastActivity));
         int act = 0;
 
         for (DetectedActivity activity : result.getProbableActivities()) {
@@ -79,15 +81,22 @@ public class ActivityRecognizedService extends IntentService {
         if (act != lastActivity){
             lastActivity = act;
             updateActivity(act);
-        }
 
-        final int finalAct = act;
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(getApplicationContext(), String.format("Activity %d", finalAct), Toast.LENGTH_LONG).show();
-            }
-        });
+            final int finalAct = act;
+
+            MainActivity.mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(getApplicationContext(), String.format("Activity %d", finalAct), Toast.LENGTH_LONG).show();
+                }
+            });
+
+            Bundle bundle = new Bundle();
+            bundle.putInt("Activity", act);
+            Message msg = new Message();
+            msg.setData(bundle);
+            MainActivity.mHandler.sendMessage(msg);
+        }
     }
 
     private void updateActivity(int activity) {
