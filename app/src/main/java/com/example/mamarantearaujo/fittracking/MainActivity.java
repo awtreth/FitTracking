@@ -13,10 +13,13 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.ActivityRecognition;
+import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -36,6 +39,11 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     private Location mLocation = null;
     public static Handler mHandler;
 
+    private int mCurrentActivity;
+    private ImageView mImageView;
+    private TextView mTextView;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,17 +53,52 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         mapFragment.getMapAsync(this);
         buildApiClient();
 
+        mCurrentActivity = DetectedActivity.UNKNOWN;
+
+        mTextView = (TextView) findViewById(R.id.textView);
+        mImageView = (ImageView) findViewById(R.id.imageView);
+
+        updateView(DetectedActivity.STILL);
 
         mHandler = new Handler(Looper.getMainLooper()) {
             @Override
             public void handleMessage(Message msg) {
-                Log.v(TAG,String.format("received msg %d",msg.getData().getInt("Activity")));
+                int activity = msg.getData().getInt("Activity");
+                Log.v(TAG,String.format("received msg %d",activity));
+                updateView(activity);
             }
 
         };
+    }
 
+    void updateView(int activity) {
+        if(activity!=mCurrentActivity) {
+            mCurrentActivity = activity;
+            int textViewVerbId = 0, imageId = 0;//toastVerbId
 
+            switch(activity) {
+                case DetectedActivity.STILL:
+                    textViewVerbId = R.string.still;
+                    imageId = R.drawable.still;
+                    break;
+                case DetectedActivity.WALKING:
+                    textViewVerbId = R.string.walking;
+                    imageId = R.drawable.walking;
+                    break;
+                case DetectedActivity.IN_VEHICLE:
+                    textViewVerbId = R.string.in_vehicle;
+                    imageId = R.drawable.in_vehicle;
+                    break;
+                case DetectedActivity.RUNNING:
+                    textViewVerbId = R.string.running;
+                    imageId = R.drawable.running;
+                    break;
+                default: Log.v(TAG,"NOT SUPPOSED TO BE HERE");
+            }
 
+            mTextView.setText(String.format(getString(R.string.text_msg), getString(textViewVerbId)));
+            mImageView.setImageResource(imageId);
+        }
     }
 
     @Override

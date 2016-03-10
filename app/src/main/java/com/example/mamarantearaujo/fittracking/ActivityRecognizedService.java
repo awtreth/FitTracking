@@ -80,7 +80,6 @@ public class ActivityRecognizedService extends IntentService {
         //int activity = result.getMostProbableActivity().getType();
         if (act != lastActivity){
             lastActivity = act;
-            updateActivity(act);
 
             final int finalAct = act;
 
@@ -97,41 +96,6 @@ public class ActivityRecognizedService extends IntentService {
             msg.setData(bundle);
             MainActivity.mHandler.sendMessage(msg);
         }
-    }
-
-    private void updateActivity(int activity) {
-        int imageID = 0;
-        int toastMsgID = 0;
-        int textMsgID = 0;
-
-        switch (activity) {
-            case DetectedActivity.IN_VEHICLE: {
-                imageID = R.drawable.in_vehicle;
-                toastMsgID = R.string.toast_msg;
-                break;
-            }
-            case DetectedActivity.RUNNING: {
-                imageID = R.drawable.running;
-                toastMsgID = R.string.toast_msg;
-                break;
-            }
-            case DetectedActivity.STILL: {
-                imageID = R.drawable.still;
-                toastMsgID = R.string.toast_msg;
-                break;
-            }
-            case DetectedActivity.WALKING: {
-                imageID = R.drawable.walking;
-                toastMsgID = R.string.toast_msg;
-                break;
-            }
-            default:
-                Log.e("ActivityRecogition", "Not supposed to be here");
-        }
-
-        //TextView textView = findViewByID();
-
-        //Toast.makeText(this, toastMsgID, Toast.LENGTH_SHORT).show();
     }
 
 

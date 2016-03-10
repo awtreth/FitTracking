@@ -1,14 +1,36 @@
 <resources>
+
     <string name="app_name">Fit Tracking</string>
 
-    <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
-    <string name="title_activity_maps">Map</string>
 
-    <string name="toast_msg">Toast</string>
-
-
-<!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="google_app_id">499110697891</string>
+
+    <string name="text_msg">You are %1$s</string>
+    <string name="toast_msg">You have just %1$s for %2$s</string>
+
+    <string name="walking">walking</string>
+    <string name="walked">walked</string>
+
+    <string name="run">run</string>
+    <string name="running">running</string>
+
+    <string name="in_vehicle">in vehicle</string>
+    <string name="still">still</string>
+
+    <plurals name="hour">
+        <item quantity="one">hour</item>
+        <item quantity="few">hours</item>
+    </plurals>
+
+    <plurals name="minute">
+        <item quantity="one">minute</item>
+        <item quantity="few">minutes</item>
+    </plurals>
+
+    <plurals name="second">
+        <item quantity="one">second</item>
+        <item quantity="few">seconds</item>
+    </plurals>
+
 </resources>
