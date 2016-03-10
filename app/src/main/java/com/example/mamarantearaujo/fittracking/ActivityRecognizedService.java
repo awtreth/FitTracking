@@ -41,55 +41,15 @@ public class ActivityRecognizedService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         if(ActivityRecognitionResult.hasResult(intent)) {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
-            handleDetectedActivities( result.getProbableActivities() );
+            handleDetectedActivities( result );
         }
     }
 
-    private void handleDetectedActivities(List<DetectedActivity> probableActivities) {
+    private void handleDetectedActivities(ActivityRecognitionResult result) {
 
-        HashMap<Integer, Integer> confidenceMap = new HashMap<Integer,Integer>();
-
-        for( DetectedActivity activity : probableActivities ) {
-            switch( activity.getType() ) {
-                case DetectedActivity.IN_VEHICLE: {
-                    Log.e("ActivityRecogition", "In Vehicle: " + activity.getConfidence());
-                    break;
-                }
-                case DetectedActivity.RUNNING: {
-                    Log.e( "ActivityRecogition", "Running: " + activity.getConfidence() );
-                    break;
-                }
-                case DetectedActivity.STILL: {
-                    Log.e( "ActivityRecogition", "Still: " + activity.getConfidence() );
-                    break;
-                }
-                case DetectedActivity.WALKING: {
-                    Log.e( "ActivityRecogition", "Walking: " + activity.getConfidence() );
-                    break;
-                }
-                default: Log.e( "ActivityRecogition", "Unknown: " + activity.getConfidence() ); continue;
-            }
-            confidenceMap.put(activity.getType(), activity.getConfidence());
-        }
-
-
-        if(confidenceMap.size()==0)
-            return;
-
-        int maxConfidence = Collections.max(confidenceMap.values());
-        int currentActivity = lastActivity;
-
-        for (Map.Entry<Integer, Integer> entry : confidenceMap.entrySet()) {  // Itrate through hashmap
-            if (entry.getValue()==maxConfidence) {
-                currentActivity = entry.getKey();     // Print the key with max value
-                break;
-            }
-        }
-
-        if(currentActivity != lastActivity) {
-            //TODO: updateActivity
-            lastActivity = currentActivity;
-        }
+        int activity = result.getMostProbableActivity().getType();
+        //updateActivity(activity);
+        //Toast.makeText(this.getApplicationContext(), String.format("Activity %d", activity), Toast.LENGTH_SHORT).show();
     }
 
     private void updateActivity(int activity) {
