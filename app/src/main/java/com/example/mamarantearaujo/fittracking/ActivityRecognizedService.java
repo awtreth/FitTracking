@@ -29,8 +29,7 @@ public class ActivityRecognizedService extends IntentService {
 
     //private int lastActivity = DetectedActivity.UNKNOWN;
     private final String TAG = "ActivityRecognition";
-    private final Integer goalActivities[] = {DetectedActivity.IN_VEHICLE, DetectedActivity.STILL, DetectedActivity.RUNNING, DetectedActivity.WALKING};
-    //private Handler mHandler;
+    private final Integer goalActivities[] = {DetectedActivity.IN_VEHICLE, DetectedActivity.ON_FOOT, DetectedActivity.STILL, DetectedActivity.RUNNING, DetectedActivity.WALKING};
 
 
     //Default Constructor
@@ -57,36 +56,57 @@ public class ActivityRecognizedService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         if (ActivityRecognitionResult.hasResult(intent)) {
+            Log.v(TAG, "got result");
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
             handleDetectedActivities(result);
+        } else {
+            Log.v(TAG, "no result");
         }
+    }
+
+    private int walkingOrRunning(List<DetectedActivity> probableActivities, int startPoint) {
+        for (int i = startPoint; i < probableActivities.size(); i++) {
+            if (probableActivities.get(i).getType() == DetectedActivity.RUNNING)
+                return DetectedActivity.RUNNING;
+            else if (probableActivities.get(i).getType() == DetectedActivity.WALKING)
+                return DetectedActivity.WALKING;
+        }
+        return DetectedActivity.WALKING;
     }
 
     private void handleDetectedActivities(ActivityRecognitionResult result) {
 
         //Log.v(TAG, String.format("-----Last activity = %d-------------------", lastActivity));
-        int act = 0;
+        int act = -1;
 
-        for (DetectedActivity activity : result.getProbableActivities()) {
-            Log.v(TAG, String.format("Activity %d; Confidence %d", activity.getType(), activity.getConfidence()));
-            if (Arrays.asList(goalActivities).contains(activity.getType())) {
-                act = activity.getType();
-                Log.v(TAG, String.format("THE Activity %d; Confidence %d", activity.getType(), activity.getConfidence()));
+        List<DetectedActivity> probableActivities = result.getProbableActivities();
+
+        for (int i = 0; i < probableActivities.size(); i++) {
+            int activityType = probableActivities.get(i).getType();
+            Log.v(TAG, String.format("Activity %d; Confidence %d", activityType, probableActivities.get(i).getConfidence()));
+
+            if (activityType == DetectedActivity.STILL) {
+                act = DetectedActivity.STILL;
+                break;
+            } else if (activityType == DetectedActivity.IN_VEHICLE) {
+                act = DetectedActivity.IN_VEHICLE;
+                break;
+            } else if (activityType == DetectedActivity.ON_FOOT) {
+                act = walkingOrRunning(probableActivities, i);
                 break;
             }
         }
 
         //Send activity information to MainActivity
-        //if (act != lastActivity){
-           // lastActivity = act;
-
+        if (act != -1) {
+            // lastActivity = act;
             Bundle bundle = new Bundle();
-            bundle.putInt("ActivityType",  act);
+            bundle.putInt("ActivityType", act);
             bundle.putLong("ActivityTime", result.getTime());
             Message msg = new Message();
             msg.setData(bundle);
             MainActivity.mHandler.sendMessage(msg);
-        //}
+        }
     }
 
 }

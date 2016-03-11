@@ -40,8 +40,8 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     private Location mLocation = null;
     public static Handler mHandler;
 
-    private int mCurrentActivity;
-    long mLastTime;
+    private int mLastActivity = DetectedActivity.STILL;
+    private long mLastTime = 0;
 
     private ImageView mImageView;
     private TextView mTextView;
@@ -56,69 +56,110 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         mapFragment.getMapAsync(this);
         buildApiClient();
 
-        mCurrentActivity = DetectedActivity.UNKNOWN;
-
         mTextView = (TextView) findViewById(R.id.textView);
         mImageView = (ImageView) findViewById(R.id.imageView);
 
-        updateView(DetectedActivity.STILL, 0);
+        if (savedInstanceState != null) {
+            mLastActivity = savedInstanceState.getInt("Activity");
+            mLastTime = savedInstanceState.getLong("Time");
+        }
+
+        updateView(mLastActivity);
 
         mHandler = new Handler(Looper.getMainLooper()) {
             @Override
             public void handleMessage(Message msg) {
                 int activity = msg.getData().getInt("ActivityType");
                 long time = msg.getData().getLong("ActivityTime");
-                Log.v(TAG,String.format("received msg %d",activity));
-                updateView(activity, time);
+                Log.v(TAG, String.format("received msg %d", activity));
+                if (activity != mLastActivity) {
+                    if (mLastTime != 0)
+                        toastMsg(mLastActivity, time);
+                    updateView(activity);
+                    mLastActivity = activity;
+                    mLastTime = time;
+                }
             }
         };
     }
 
-    void updateView(int activity, long time) {
-        if(activity != mCurrentActivity) {
-            mCurrentActivity = activity;
-            int textViewVerbId = 0, imageId = 0, toastVerbId = 0;
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putInt("Activity", mLastActivity);
+        outState.putLong("Time", mLastTime);
+        super.onSaveInstanceState(outState);
+    }
 
-            switch(activity) {
+    private class ActivityIds {
+        public int imageId;
+        public int textViewId;
+        public int toastMsgId;
+
+        ActivityIds(int activity) {
+            switch (activity) {
                 case DetectedActivity.STILL:
-                    textViewVerbId = R.string.still;
+                    textViewId = R.string.still;
                     imageId = R.drawable.still;
-                    toastVerbId = R.string.still;
+                    toastMsgId = R.string.still;
                     break;
                 case DetectedActivity.WALKING:
-                    textViewVerbId = R.string.walking;
-                    toastVerbId = R.string.walked;
+                    textViewId = R.string.walking;
+                    toastMsgId = R.string.walked;
                     imageId = R.drawable.walking;
                     break;
                 case DetectedActivity.IN_VEHICLE:
-                    textViewVerbId = R.string.in_vehicle;
-                    toastVerbId = R.string.in_vehicle;
+                    textViewId = R.string.in_vehicle;
+                    toastMsgId = R.string.in_vehicle;
                     imageId = R.drawable.in_vehicle;
                     break;
                 case DetectedActivity.RUNNING:
-                    textViewVerbId = R.string.running;
-                    toastVerbId = R.string.run;
+                    textViewId = R.string.running;
+                    toastMsgId = R.string.run;
                     imageId = R.drawable.running;
                     break;
-                default: Log.v(TAG,"NOT SUPPOSED TO BE HERE");
+                default:
+                    Log.v("ActivityId", "NOT SUPPOSED TO BE HERE");
             }
-
-            mTextView.setText(String.format(getString(R.string.text_msg), getString(textViewVerbId)));
-            mImageView.setImageResource(imageId);
-            Toast.makeText(this, String.format(getString(R.string.toast_msg), getString(toastVerbId), "for some time"), Toast.LENGTH_SHORT).show();
         }
     }
 
+
+    void toastMsg(int activity, long time) {
+        ActivityIds activityIds = new ActivityIds(mLastActivity);
+        Toast.makeText(this, String.format(getString(R.string.toast_msg), getString(activityIds.toastMsgId), "for some time"), Toast.LENGTH_SHORT).show();
+    }
+
+    void updateView(int activity) {
+        ActivityIds activityIds = new ActivityIds(activity);
+        mTextView.setText(String.format(getString(R.string.text_msg), getString(activityIds.textViewId)));
+        mImageView.setImageResource(activityIds.imageId);
+
+    }
+
+    // Communication with the Google Service ActivityRecognitionApi
+    //TODO: complete
     @Override
     protected void onStart() {
         super.onStart();
         mApiClient.connect();
     }
 
+    @Override
+    protected void onStop() {
+        try {
+            ActivityRecognition.ActivityRecognitionApi.removeActivityUpdates(mApiClient, mPendingIntent);
+        } catch (IllegalStateException e) {
+            //Ignore
+        }
+        mApiClient.disconnect();
+        super.onStop();
+    }
+
+
     private void buildApiClient() {
         mApiClient = new GoogleApiClient.Builder(this)
                 .addApi(ActivityRecognition.API)
-                //.addApi(LocationServices.API)
+                        //.addApi(LocationServices.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
@@ -126,20 +167,12 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
 
     private PendingIntent mPendingIntent;
 
+
     @Override
     public void onConnected(Bundle bundle) {
         Intent intent = new Intent(this, ActivityRecognizedService.class);
         mPendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(mApiClient, 3000, mPendingIntent);
-    }
-
-
-
-    @Override
-    protected void onStop() {
-        ActivityRecognition.ActivityRecognitionApi.removeActivityUpdates(mApiClient, mPendingIntent);
-        mApiClient.disconnect();
-        super.onStop();
     }
 
     @Override
@@ -152,6 +185,9 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
 
     }
 
+
+    //GOOGLE MAPS STUFF
+    //TODO: Zoom in the maps automatically to show current location.
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -174,8 +210,8 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
             if (permissions.length == 1 &&
                     permissions[0] == Manifest.permission.ACCESS_FINE_LOCATION &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                        ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     //TODO: print an error
                     return;
                 }
