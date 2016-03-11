@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -40,6 +41,8 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     public static Handler mHandler;
 
     private int mCurrentActivity;
+    long mLastTime;
+
     private ImageView mImageView;
     private TextView mTextView;
 
@@ -58,39 +61,43 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         mTextView = (TextView) findViewById(R.id.textView);
         mImageView = (ImageView) findViewById(R.id.imageView);
 
-        updateView(DetectedActivity.STILL);
+        updateView(DetectedActivity.STILL, 0);
 
         mHandler = new Handler(Looper.getMainLooper()) {
             @Override
             public void handleMessage(Message msg) {
-                int activity = msg.getData().getInt("Activity");
+                int activity = msg.getData().getInt("ActivityType");
+                long time = msg.getData().getLong("ActivityTime");
                 Log.v(TAG,String.format("received msg %d",activity));
-                updateView(activity);
+                updateView(activity, time);
             }
-
         };
     }
 
-    void updateView(int activity) {
-        if(activity!=mCurrentActivity) {
+    void updateView(int activity, long time) {
+        if(activity != mCurrentActivity) {
             mCurrentActivity = activity;
-            int textViewVerbId = 0, imageId = 0;//toastVerbId
+            int textViewVerbId = 0, imageId = 0, toastVerbId = 0;
 
             switch(activity) {
                 case DetectedActivity.STILL:
                     textViewVerbId = R.string.still;
                     imageId = R.drawable.still;
+                    toastVerbId = R.string.still;
                     break;
                 case DetectedActivity.WALKING:
                     textViewVerbId = R.string.walking;
+                    toastVerbId = R.string.walked;
                     imageId = R.drawable.walking;
                     break;
                 case DetectedActivity.IN_VEHICLE:
                     textViewVerbId = R.string.in_vehicle;
+                    toastVerbId = R.string.in_vehicle;
                     imageId = R.drawable.in_vehicle;
                     break;
                 case DetectedActivity.RUNNING:
                     textViewVerbId = R.string.running;
+                    toastVerbId = R.string.run;
                     imageId = R.drawable.running;
                     break;
                 default: Log.v(TAG,"NOT SUPPOSED TO BE HERE");
@@ -98,6 +105,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
 
             mTextView.setText(String.format(getString(R.string.text_msg), getString(textViewVerbId)));
             mImageView.setImageResource(imageId);
+            Toast.makeText(this, String.format(getString(R.string.toast_msg), getString(toastVerbId), "for some time"), Toast.LENGTH_SHORT).show();
         }
     }
 

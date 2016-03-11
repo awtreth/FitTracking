@@ -27,7 +27,7 @@ import java.util.Map;
  */
 public class ActivityRecognizedService extends IntentService {
 
-    private int lastActivity = DetectedActivity.UNKNOWN;
+    //private int lastActivity = DetectedActivity.UNKNOWN;
     private final String TAG = "ActivityRecognition";
     private final Integer goalActivities[] = {DetectedActivity.IN_VEHICLE, DetectedActivity.STILL, DetectedActivity.RUNNING, DetectedActivity.WALKING};
     //private Handler mHandler;
@@ -47,7 +47,6 @@ public class ActivityRecognizedService extends IntentService {
         super(name);
     }
 
-
     //@Override
     //It is called in the Activity context
     /*public int onStartCommand(Intent intent, int flags, int startId) {
@@ -65,7 +64,7 @@ public class ActivityRecognizedService extends IntentService {
 
     private void handleDetectedActivities(ActivityRecognitionResult result) {
 
-        Log.v(TAG, String.format("-----Last activity = %d-------------------", lastActivity));
+        //Log.v(TAG, String.format("-----Last activity = %d-------------------", lastActivity));
         int act = 0;
 
         for (DetectedActivity activity : result.getProbableActivities()) {
@@ -77,41 +76,17 @@ public class ActivityRecognizedService extends IntentService {
             }
         }
 
-        //int activity = result.getMostProbableActivity().getType();
-        if (act != lastActivity){
-            lastActivity = act;
-
-            final int finalAct = act;
-
-            MainActivity.mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    int toastVerbId = 0;
-                    switch(finalAct) {
-                        case DetectedActivity.STILL:
-                            toastVerbId = R.string.still;
-                            break;
-                        case DetectedActivity.WALKING:
-                            toastVerbId = R.string.walked;
-                            break;
-                        case DetectedActivity.IN_VEHICLE:
-                            toastVerbId = R.string.in_vehicle;
-                            break;
-                        case DetectedActivity.RUNNING:
-                            toastVerbId = R.string.run;
-                            break;
-                        default: Log.v(TAG,"NOT SUPPOSED TO BE HERE");
-                    }
-                    //Toast.makeText(getApplicationContext(), String.format(getString(R.string.toast_msg),getString(toastVerbId),"some time"), Toast.LENGTH_LONG).show();
-                }
-            });
+        //Send activity information to MainActivity
+        //if (act != lastActivity){
+           // lastActivity = act;
 
             Bundle bundle = new Bundle();
-            bundle.putInt("Activity", act);
+            bundle.putInt("ActivityType",  act);
+            bundle.putLong("ActivityTime", result.getTime());
             Message msg = new Message();
             msg.setData(bundle);
             MainActivity.mHandler.sendMessage(msg);
-        }
+        //}
     }
 
 }
