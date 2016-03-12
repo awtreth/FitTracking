@@ -74,7 +74,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
                 Log.v(TAG, String.format("received msg %d", activity));
                 if (activity != mLastActivity) {
                     if (mLastTime != 0)
-                        toastMsg(mLastActivity, time);
+                        toastMsg(mLastActivity, time-mLastTime);
                     updateView(activity);
                     mLastActivity = activity;
                     mLastTime = time;
@@ -123,10 +123,34 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         }
     }
 
+    private String timeToString(long time) {
+        String str = new String();
+
+        Integer hours = (int) (time/3600);
+        Integer minutes = (int) ((time%3600)/60);
+        Integer seconds = (int) time%60;
+
+        if(hours > 0) {
+            str.concat(" "+hours.toString()+" ");
+            str.concat(getResources().getQuantityString(R.plurals.hour, hours));
+        }
+        if(minutes > 0) {
+            str.concat(" "+minutes.toString()+" ");
+            str.concat(getResources().getQuantityString(R.plurals.minute, minutes));
+        }
+
+        if(seconds> 0) {
+            str.concat(" "+seconds.toString()+" ");
+            str.concat(getResources().getQuantityString(R.plurals.second, seconds));
+        }
+
+        return str;
+    }
+
 
     void toastMsg(int activity, long time) {
         ActivityIds activityIds = new ActivityIds(mLastActivity);
-        Toast.makeText(this, String.format(getString(R.string.toast_msg), getString(activityIds.toastMsgId), "for some time"), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, String.format(getString(R.string.toast_msg), getString(activityIds.toastMsgId), timeToString(time)), Toast.LENGTH_SHORT).show();
     }
 
     void updateView(int activity) {

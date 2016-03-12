@@ -13,7 +13,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 public class ActivityRecognitionManager implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener{
     private GoogleApiClient mApiClient = null;
     int mLastActivity;
-    //LinkedList<ActivityRecord> recordedActivities;
     private final String TAG = "ActivityRecognitionManager";
     Handler mActivityHandler;
     PendingIntent mServicePendingIntent;
