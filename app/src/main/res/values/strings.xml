@@ -20,17 +20,17 @@
 
     <plurals name="hour">
         <item quantity="one">hour</item>
-        <item quantity="few">hours</item>
+        <item quantity="other">hours</item>
     </plurals>
 
     <plurals name="minute">
         <item quantity="one">minute</item>
-        <item quantity="few">minutes</item>
+        <item quantity="other">minutes</item>
     </plurals>
 
     <plurals name="second">
         <item quantity="one">second</item>
-        <item quantity="few">seconds</item>
+        <item quantity="other">seconds</item>
     </plurals>
 
 </resources>

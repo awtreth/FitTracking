@@ -72,9 +72,9 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
                 int activity = msg.getData().getInt("ActivityType");
                 long time = msg.getData().getLong("ActivityTime");
                 Log.v(TAG, String.format("received msg %d", activity));
-                if (activity != mLastActivity) {
+                if (activity != mLastActivity || mLastTime == 0) {
                     if (mLastTime != 0)
-                        toastMsg(mLastActivity, time-mLastTime);
+                        toastMsg(mLastActivity, time - mLastTime);
                     updateView(activity);
                     mLastActivity = activity;
                     mLastTime = time;
@@ -124,24 +124,25 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     }
 
     private String timeToString(long time) {
-        String str = new String();
+        String str = new String(" ");
 
-        Integer hours = (int) (time/3600);
-        Integer minutes = (int) ((time%3600)/60);
-        Integer seconds = (int) time%60;
+        time = time / 1000;
+        Integer hours = (int) (time / 3600);
+        Integer minutes = (int) ((time % 3600) / 60);
+        Integer seconds = (int) time % 60;
 
-        if(hours > 0) {
-            str.concat(" "+hours.toString()+" ");
-            str.concat(getResources().getQuantityString(R.plurals.hour, hours));
+        if (hours > 0) {
+            str = str + hours.toString() + " ";
+            str = str + getResources().getQuantityString(R.plurals.hour, hours);
         }
-        if(minutes > 0) {
-            str.concat(" "+minutes.toString()+" ");
-            str.concat(getResources().getQuantityString(R.plurals.minute, minutes));
+        if (minutes > 0) {
+            str = str + " " + minutes.toString() + " ";
+            str = str + getResources().getQuantityString(R.plurals.minute, minutes);
         }
 
-        if(seconds> 0) {
-            str.concat(" "+seconds.toString()+" ");
-            str.concat(getResources().getQuantityString(R.plurals.second, seconds));
+        if (seconds > 0) {
+            str = str + " " + seconds.toString() + " ";
+            str = str + getResources().getQuantityString(R.plurals.second, seconds);
         }
 
         return str;
@@ -149,7 +150,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
 
 
     void toastMsg(int activity, long time) {
-        ActivityIds activityIds = new ActivityIds(mLastActivity);
+        ActivityIds activityIds = new ActivityIds(activity);
         Toast.makeText(this, String.format(getString(R.string.toast_msg), getString(activityIds.toastMsgId), timeToString(time)), Toast.LENGTH_SHORT).show();
     }
 
