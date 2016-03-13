@@ -32,5 +32,6 @@
         <item quantity="one">second</item>
         <item quantity="other">seconds</item>
     </plurals>
+    <string name="title_activity_google_map_fragment">Map</string>
 
 </resources>
