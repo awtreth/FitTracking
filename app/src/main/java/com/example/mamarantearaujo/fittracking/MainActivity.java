@@ -1,5 +1,6 @@
 package com.example.mamarantearaujo.fittracking;
 
+import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
@@ -9,7 +10,6 @@ import android.content.IntentFilter;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.MediaPlayer;
-import android.os.Handler;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
@@ -32,9 +32,9 @@ import java.util.Map;
 /*
     UI Activity. It handles the connection with the Activitity Recognition Google Service and view updates
  */
-public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class MainActivity extends AppCompatActivity {
 
-    private GoogleApiClient mApiClient = null;//To connect to Google Servieces
+    private ActivityRecognitionApiClient activityRecognitionApiClient = null;//To connect to Google Servieces
     private final String TAG = "Main";//for debug purposes
 
     //Store the lastActivity (actually it's the current while there is no activity update)
@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        buildApiClient();//Initialize mApiClient
+        activityRecognitionApiClient = new ActivityRecognitionApiClient(this);
 
         mDataBase = new DbHelper(this).getWritableDatabase();
 
@@ -206,19 +206,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     // Communication with the Google Service ActivityRecognitionApi
     @Override
     protected void onStart() {
-        mApiClient.connect();
+        activityRecognitionApiClient.connect();
         super.onStart();
     }
 
     @Override
     protected void onStop() {
-        try {
-            ActivityRecognition.ActivityRecognitionApi.removeActivityUpdates(mApiClient, mPendingIntent);
-        } catch (IllegalStateException e) {
-            //Ignore
-        }
-        mApiClient.disconnect();
-
+        activityRecognitionApiClient.disconnect();
         super.onStop();
     }
 
@@ -240,35 +234,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
 
         super.onDestroy();
-    }
-
-    private void buildApiClient() {
-        mApiClient = new GoogleApiClient.Builder(this)
-                .addApi(ActivityRecognition.API)
-                        //.addApi(LocationServices.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
-    }
-
-    private PendingIntent mPendingIntent;
-
-
-    @Override
-    public void onConnected(Bundle bundle) {
-        Intent intent = new Intent(this, ActivityRecognizedService.class);
-        mPendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(mApiClient, 3000, mPendingIntent);
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-
     }
 
 }
