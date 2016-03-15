@@ -1,7 +1,10 @@
 package com.example.mamarantearaujo.fittracking;
 
 import android.app.PendingIntent;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -13,6 +16,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.mamarantearaujo.fittracking.DataBase.DbHelper;
+import com.example.mamarantearaujo.fittracking.DataBase.DbSchema;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.ActivityRecognition;
@@ -40,6 +45,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private ImageView mImageView;
     private TextView mTextView;
 
+    SQLiteDatabase mDataBase;
+
+
 
     /*
     Auxiliar class that store Ids related to each activity
@@ -64,6 +72,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         setContentView(R.layout.activity_main);
 
         buildApiClient();//Initialize mApiClient
+
+        mDataBase = new DbHelper(this).getWritableDatabase();
 
         mTextView = (TextView) findViewById(R.id.textView);
         mImageView = (ImageView) findViewById(R.id.imageView);
@@ -104,6 +114,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     Time startTime = new Time(time);
 
                     //TODO: save activity and startTime (or startTime.toString()) in the DataBase
+
+                    ContentValues values = new ContentValues();
+                    values.put(DbSchema.activityTable.Cols.activityType, activity);
+                    values.put(DbSchema.activityTable.Cols.activityTime, startTime.toString());
+
+                    mDataBase.insert(DbSchema.activityTable.NAME, null, values);
 
                     mLastActivity = activity;
                     mLastTime = time;
@@ -176,9 +192,27 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             //Ignore
         }
         mApiClient.disconnect();
+
         super.onStop();
     }
 
+    @Override
+    protected void onDestroy() {
+        Cursor cursor = mDataBase.query(DbSchema.activityTable.NAME, null, null, null, null, null, null);
+
+        cursor.moveToFirst();
+
+        while (!cursor.isAfterLast()) {
+            Integer activity = cursor.getInt(cursor.getColumnIndex(DbSchema.activityTable.Cols.activityType));
+            String timeStr = cursor.getString(cursor.getColumnIndex(DbSchema.activityTable.Cols.activityTime));
+            Log.v(TAG, activity.toString() + " " + timeStr);
+            cursor.moveToNext();
+        }
+        cursor.close();
+
+        mDataBase.close();
+        super.onDestroy();
+    }
 
     private void buildApiClient() {
         mApiClient = new GoogleApiClient.Builder(this)
