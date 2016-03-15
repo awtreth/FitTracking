@@ -47,24 +47,24 @@ public class ActivityRecognizedService extends IntentService {
         super(name);
     }
 
-    //@Override
-    //It is called in the Activity context
-    /*public int onStartCommand(Intent intent, int flags, int startId) {
-        mHandler = new Handler();//create a handler of MainActivity
-        return super.onStartCommand(intent, flags, startId);
-    }*/
 
     @Override
     protected void onHandleIntent(Intent intent) {
         if (ActivityRecognitionResult.hasResult(intent)) {
-            Log.v(TAG, "got result");
+            //Log.v(TAG, "got result");
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
             handleDetectedActivities(result);
         } else {
-            Log.v(TAG, "no result");
+            //Log.v(TAG, "no result");
         }
     }
 
+    /*
+    Called when ON_FOOT is the most probable activity
+    Return the most probable activity between RUNNING and WALKING
+    @param probableActivities: list of DetectedActivities
+    @param startPoint: the position it will start looking for the running and walking activities in the list
+     */
     private int walkingOrRunning(List<DetectedActivity> probableActivities, int startPoint) {
         for (int i = startPoint; i < probableActivities.size(); i++) {
             if (probableActivities.get(i).getType() == DetectedActivity.RUNNING)

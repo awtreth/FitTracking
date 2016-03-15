@@ -139,7 +139,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 else if(mLastActivity == DetectedActivity.RUNNING)
                     stopMusic();
 
-
                 Time startTime = new Time(time);
 
                 ContentValues values = new ContentValues();
