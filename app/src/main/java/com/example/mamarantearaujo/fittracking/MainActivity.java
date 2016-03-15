@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private TextView mTextView;
 
     SQLiteDatabase mDataBase;
-    MediaPlayer mMediaPlayer;
+    static MediaPlayer mMediaPlayer;
 
 
     /*
@@ -101,6 +101,19 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     }
 
+    private void playMusic() {
+        mMediaPlayer = MediaPlayer.create(this, R.raw.beat_02);
+        mMediaPlayer.setLooping(true);
+        mMediaPlayer.start();
+    }
+
+    private void stopMusic() {
+        mMediaPlayer.stop();
+        mMediaPlayer.release();
+        mMediaPlayer = null;
+    }
+
+
     // Our handler for received Intents. This will be called whenever an Intent
 // with an action named "custom-event-name" is broadcasted.
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
@@ -121,9 +134,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
                 updateView(activity);
 
-                Time startTime = new Time(time);
+                if(activity == DetectedActivity.RUNNING)
+                    playMusic();
+                else if(mLastActivity == DetectedActivity.RUNNING)
+                    stopMusic();
 
-                //TODO: save activity and startTime (or startTime.toString()) in the DataBase
+
+                Time startTime = new Time(time);
 
                 ContentValues values = new ContentValues();
                 values.put(DbSchema.activityTable.Cols.activityType, activity);
