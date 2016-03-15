@@ -1,15 +1,17 @@
 package com.example.mamarantearaujo.fittracking;
 
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.media.MediaPlayer;
 import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.ImageView;
@@ -24,10 +26,8 @@ import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.DetectedActivity;
 
 import java.sql.Time;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /*
     UI Activity. It handles the connection with the Activitity Recognition Google Service and view updates
@@ -36,7 +36,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     private GoogleApiClient mApiClient = null;//To connect to Google Servieces
     private final String TAG = "Main";//for debug purposes
-    public static Handler mHandler;//Global handler to be used in ActivityRecognizedService
 
     //Store the lastActivity (actually it's the current while there is no activity update)
     private int mLastActivity = DetectedActivity.STILL;//STILL by default (only for the 1st time)
@@ -46,7 +45,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private TextView mTextView;
 
     SQLiteDatabase mDataBase;
-
+    MediaPlayer mMediaPlayer;
 
 
     /*
@@ -64,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
     }
 
-    private HashMap<Integer, ActivityIds> mActivityIds;//Map each activity to its ActivityIds
+    private Map<Integer, ActivityIds> mActivityIds;//Map each activity to its ActivityIds
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,39 +93,50 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         updateView(mLastActivity);
 
-        //Initialize global handler (it expects updates from ActivityRecognizedService)
-        mHandler = new Handler(Looper.getMainLooper()) {
-            @Override
-            public void handleMessage(Message msg) {//Handle the messages sent by ActivityRecognizedService
-                //Detected Activity and Time
-                int activity = msg.getData().getInt("ActivityType");
-                long time = msg.getData().getLong("ActivityTime");
+        // Register to receive messages.
+        // We are registering an observer (mMessageReceiver) to receive Intents
+        // with actions named "custom-event-name".
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
+                new IntentFilter("ActivityRecognition"));
 
-                Log.v(TAG, String.format("received msg %d", activity));
-
-                //The activity has changed OR it's the first run
-                if (activity != mLastActivity || mLastTime == 0) {
-                    if (mLastTime != 0)//not the first run
-                        toastMsg(mLastActivity, time - mLastTime);
-
-                    updateView(activity);
-
-                    Time startTime = new Time(time);
-
-                    //TODO: save activity and startTime (or startTime.toString()) in the DataBase
-
-                    ContentValues values = new ContentValues();
-                    values.put(DbSchema.activityTable.Cols.activityType, activity);
-                    values.put(DbSchema.activityTable.Cols.activityTime, startTime.toString());
-
-                    mDataBase.insert(DbSchema.activityTable.NAME, null, values);
-
-                    mLastActivity = activity;
-                    mLastTime = time;
-                }
-            }
-        };
     }
+
+    // Our handler for received Intents. This will be called whenever an Intent
+// with an action named "custom-event-name" is broadcasted.
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            //Detected Activity and Time
+            Bundle msg = intent.getBundleExtra("ActivityInfo");
+            int activity = msg.getInt("ActivityType");
+            long time = msg.getLong("ActivityTime");
+
+            Log.v(TAG, String.format("received msg %d", activity));
+
+            //The activity has changed OR it's the first run
+            if (activity != mLastActivity || mLastTime == 0) {
+                if (mLastTime != 0)//not the first run
+                    toastMsg(mLastActivity, time - mLastTime);
+
+                updateView(activity);
+
+                Time startTime = new Time(time);
+
+                //TODO: save activity and startTime (or startTime.toString()) in the DataBase
+
+                ContentValues values = new ContentValues();
+                values.put(DbSchema.activityTable.Cols.activityType, activity);
+                values.put(DbSchema.activityTable.Cols.activityTime, startTime.toString());
+
+                mDataBase.insert(DbSchema.activityTable.NAME, null, values);
+
+                mLastActivity = activity;
+                mLastTime = time;
+            }
+        }
+    };
+
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -211,6 +221,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         cursor.close();
 
         mDataBase.close();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
+
         super.onDestroy();
     }
 

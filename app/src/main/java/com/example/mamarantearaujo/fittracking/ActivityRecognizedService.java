@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -103,9 +104,11 @@ public class ActivityRecognizedService extends IntentService {
             Bundle bundle = new Bundle();
             bundle.putInt("ActivityType", act);
             bundle.putLong("ActivityTime", result.getTime());
-            Message msg = new Message();
-            msg.setData(bundle);
-            MainActivity.mHandler.sendMessage(msg);
+
+            Intent intent = new Intent("ActivityRecognition");
+            intent.putExtra("ActivityInfo",bundle);
+
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
         }
     }
 
