@@ -18,6 +18,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.DetectedActivity;
 
+import java.sql.Time;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -99,6 +100,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                         toastMsg(mLastActivity, time - mLastTime);
 
                     updateView(activity);
+
+                    Time startTime = new Time(time);
+
+                    //TODO: save activity and startTime (or startTime.toString()) in the DataBase
+
                     mLastActivity = activity;
                     mLastTime = time;
                 }
