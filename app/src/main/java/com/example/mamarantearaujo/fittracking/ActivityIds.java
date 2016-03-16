@@ -1,7 +1,7 @@
 package com.example.mamarantearaujo.fittracking;
 
 /*
-    Auxiliar class that store Ids related to each activity
+    Auxiliary class that store resource Ids related to each activity
      */
 public class ActivityIds {
     public int imageId;

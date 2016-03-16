@@ -16,16 +16,17 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by mateus on 3/15/2016.
+ * Handle some Helper functions related to Detected Activity
  */
 public class ActivityRecognitionLab {
 
     private final Context mContext;
+    //Map ActivityType -> resource ids
     private final Map<Integer, ActivityIds> mActivityIdMap;
 
     ActivityRecognitionLab(Context context) {
         mContext = context;
-
+        //Map ActivityType -> resource ids
         HashMap<Integer, ActivityIds> map = new HashMap<>();
         map.put(DetectedActivity.STILL, new ActivityIds(R.drawable.still, R.string.still, R.string.still));
         map.put(DetectedActivity.WALKING, new ActivityIds(R.drawable.walking, R.string.walking, R.string.walked));
@@ -35,10 +36,16 @@ public class ActivityRecognitionLab {
 
     }
 
+    //return the resource ids of the provided activity type
     public ActivityIds getActivityIds(int activity) {
         return mActivityIdMap.get(activity);
     }
 
+    /*
+    Convert a duration time in UTC milliseconds to the format:
+    "[hh] hours [mm] minutes [ss] seconds"
+    This is supposed to be used in the ToastMsg
+    */
     public String durationToString(long time) {
         String str = new String(" ");
 

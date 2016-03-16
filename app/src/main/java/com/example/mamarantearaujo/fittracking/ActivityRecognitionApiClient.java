@@ -10,19 +10,26 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.ActivityRecognition;
 
 /**
- * Created by mateus on 3/15/2016.
+ * Handle the connection with Google Activity Recognition Service
  */
 public class ActivityRecognitionApiClient implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
-    private GoogleApiClient mApiClient = null;//To connect to Google Servieces
-    private Context mContext;
-    private PendingIntent mPendingIntent;
+    private GoogleApiClient mApiClient = null;//To connect to Google Services
+    private Context mContext;//In our case it'll be the MainActivity instance
 
+    private PendingIntent mPendingIntent;//Will be the ActivityRecognizedService ServiceIntent
+
+    /*
+    Already setup conncetion with Google Google Activity Recognition Service
+     */
     ActivityRecognitionApiClient(Context context) {
         mContext = context;
         buildApiClient();
     }
 
+    /*
+    Setup the connection with Google Google Activity Recognition Service
+     */
     private void buildApiClient() {
         mApiClient = new GoogleApiClient.Builder(mContext)
                 .addApi(ActivityRecognition.API)
@@ -31,10 +38,18 @@ public class ActivityRecognitionApiClient implements GoogleApiClient.ConnectionC
                 .build();
     }
 
+    /*
+    Start the connection with Google Google Activity Recognition Service
+    Supposed to be called in onStart method of MainActivity
+     */
     public void connect(){
         mApiClient.connect();
     }
 
+    /*
+   Explicitly disconnect from Google Google Activity Recognition Service. Also removeActivityUpdates from ActivityRecognizedService
+   Supposed to be called in onStop method of MainActivity
+    */
     public void disconnect(){
         try {
             ActivityRecognition.ActivityRecognitionApi.removeActivityUpdates(mApiClient, mPendingIntent);
@@ -47,8 +62,13 @@ public class ActivityRecognitionApiClient implements GoogleApiClient.ConnectionC
 
     @Override
     public void onConnected(Bundle bundle) {
+        /*
+        Whenever Google Activity Recognition Service has an update, it sends it to ActivityRecognizedService
+        that is created on demand
+         */
         Intent intent = new Intent(mContext, ActivityRecognizedService.class);
         mPendingIntent = PendingIntent.getService(mContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        //Google Activity Recognition Service will try to send information every 3 seconds, although this is not guaranteed
         ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(mApiClient, 3000, mPendingIntent);
     }
 

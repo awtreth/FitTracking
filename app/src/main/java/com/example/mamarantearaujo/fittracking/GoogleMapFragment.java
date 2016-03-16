@@ -81,6 +81,7 @@ public class GoogleMapFragment extends SupportMapFragment implements OnMapReadyC
             // Permission to access the location is missing.
             //TODO: print an error
         } else {
+            //Automatically zoom in the current position
             Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
             if (location != null) {
                 LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());

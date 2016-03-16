@@ -1,7 +1,7 @@
 package com.example.mamarantearaujo.fittracking.DataBase;
 
 /**
- * Created by mamarantearaujo on 3/15/2016.
+ * Database Schema to store ActivityRecords
  */
 public class DbSchema {
     public static final class activityTable {

@@ -24,14 +24,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by mamarantearaujo on 3/5/2016.
+ * PendingIntent that gets updates from Google Activity Recognition Service
+ * The connection is handled by ActivityRecognitionApiClient used in MainActivity
  */
 public class ActivityRecognizedService extends IntentService {
 
     //private int lastActivity = DetectedActivity.UNKNOWN;
     private final String TAG = "ActivityRecognition";
-    private final Integer goalActivities[] = {DetectedActivity.IN_VEHICLE, DetectedActivity.ON_FOOT, DetectedActivity.STILL, DetectedActivity.RUNNING, DetectedActivity.WALKING};
-
 
     //Default Constructor
     public ActivityRecognizedService() {
@@ -80,8 +79,9 @@ public class ActivityRecognizedService extends IntentService {
         //Log.v(TAG, String.format("-----Last activity = %d-------------------", lastActivity));
         int act = -1;
 
-        List<DetectedActivity> probableActivities = result.getProbableActivities();
+        List<DetectedActivity> probableActivities = result.getProbableActivities();//List of probable activities
 
+        //Filter the activities of interest
         for (int i = 0; i < probableActivities.size(); i++) {
             int activityType = probableActivities.get(i).getType();
             Log.v(TAG, String.format("Activity %d; Confidence %d", activityType, probableActivities.get(i).getConfidence()));
@@ -98,7 +98,7 @@ public class ActivityRecognizedService extends IntentService {
             }
         }
 
-        //Send activity information to MainActivity
+        //Send activity information (ActivityType and ActivityTime) to MainActivity
         if (act != -1) {
             // lastActivity = act;
             Bundle bundle = new Bundle();

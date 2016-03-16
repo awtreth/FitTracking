@@ -12,10 +12,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by mateus on 3/15/2016.
+ * Handle database interaction
  */
 public class DbManager {
-    private final Context mContext;
+    private final Context mContext;//In this case it'll be our MainActivity instance
     private static SQLiteDatabase mDataBase = null;
 
     public DbManager(Context context) {
@@ -25,6 +25,9 @@ public class DbManager {
         }
     }
 
+    /*
+    Save the provided ActivityRecord in the database
+     */
     public void storeActivity(ActivityRecord record) {
         ContentValues values = new ContentValues();
         values.put(DbSchema.activityTable.Cols.activityType, record.mActivity);
@@ -33,6 +36,9 @@ public class DbManager {
         mDataBase.insert(DbSchema.activityTable.NAME, null, values);
     }
 
+    /*
+    Return a list of all saved ActivityRecords currently in the database
+     */
     List<ActivityRecord> queryAllActivityRecords(){
         LinkedList<ActivityRecord> list =  new LinkedList<>();
 
@@ -51,6 +57,10 @@ public class DbManager {
         return list;
     }
 
+    /*
+    Return the last ActivityRecord that was saved in the database.
+    For now it does not check if the database is empty or not
+     */
     public ActivityRecord getLastActivityRecord() {
         Cursor cursor = mDataBase.query(DbSchema.activityTable.NAME, null, null, null, null, null, null);
         cursor.moveToLast();
@@ -59,6 +69,17 @@ public class DbManager {
         return new ActivityRecord(activity, startTime);
     }
 
+    /*
+    Close the database
+     */
+    public void close() {
+        mDataBase.close();
+    }
+
+    /*
+    Return a string that show all the contents of the database
+    ActivityNumber ActivityStartTime
+     */
     public String toString(){
         String str = new String();
 
