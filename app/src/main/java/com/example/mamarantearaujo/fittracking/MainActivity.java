@@ -86,10 +86,10 @@ public class MainActivity extends AppCompatActivity {
 
 
         //In case of landscape-portrait switch
-        if (savedInstanceState != null) {
-            mLastActivity = savedInstanceState.getInt("Activity");
-            mLastTime = savedInstanceState.getLong("Time");
-        }
+//        if (savedInstanceState != null) {
+//            mLastActivity = savedInstanceState.getInt("Activity");
+//            mLastTime = savedInstanceState.getLong("Time");
+//        }
 
         updateView(mLastActivity);
 
@@ -153,11 +153,11 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-
+    //only necessary if the phone is rotated
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        outState.putInt("Activity", mLastActivity);
-        outState.putLong("Time", mLastTime);
+//        outState.putInt("Activity", mLastActivity);
+//        outState.putLong("Time", mLastTime);
         super.onSaveInstanceState(outState);
     }
 
@@ -213,11 +213,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         activityRecognitionApiClient.disconnect();
-        super.onStop();
-    }
-
-    @Override
-    protected void onDestroy() {
         Cursor cursor = mDataBase.query(DbSchema.activityTable.NAME, null, null, null, null, null, null);
 
         cursor.moveToFirst();
@@ -230,9 +225,17 @@ public class MainActivity extends AppCompatActivity {
         }
         cursor.close();
 
-        mDataBase.close();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
+//        mDataBase.close();
+        //LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
 
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if(mMediaPlayer != null){
+            mMediaPlayer.release();
+        }
         super.onDestroy();
     }
 
