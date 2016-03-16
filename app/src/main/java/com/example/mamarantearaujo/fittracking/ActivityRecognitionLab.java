@@ -70,5 +70,20 @@ public class ActivityRecognitionLab {
         return str;
     }
 
+    public String parseActivityType(int activity) {
+        return mContext.getResources().getString(this.getActivityIds(activity).textViewId);
+    }
+
+    public int parseActivityName(String activityName) {
+        if(mContext.getResources().getString(this.getActivityIds(DetectedActivity.STILL).textViewId).equals(activityName))
+            return DetectedActivity.STILL;
+        if(mContext.getResources().getString(this.getActivityIds(DetectedActivity.WALKING).textViewId).equals(activityName))
+            return DetectedActivity.WALKING;
+        if(mContext.getResources().getString(this.getActivityIds(DetectedActivity.RUNNING).textViewId).equals(activityName))
+            return DetectedActivity.RUNNING;
+        if(mContext.getResources().getString(this.getActivityIds(DetectedActivity.IN_VEHICLE).textViewId).equals(activityName))
+            return DetectedActivity.IN_VEHICLE;
+        return DetectedActivity.STILL;
+    }
 
 }
