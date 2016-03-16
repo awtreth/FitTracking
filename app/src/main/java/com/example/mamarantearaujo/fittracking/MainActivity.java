@@ -1,7 +1,5 @@
 package com.example.mamarantearaujo.fittracking;
 
-import android.app.Activity;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -20,9 +18,6 @@ import android.widget.Toast;
 
 import com.example.mamarantearaujo.fittracking.DataBase.DbHelper;
 import com.example.mamarantearaujo.fittracking.DataBase.DbSchema;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.DetectedActivity;
 
 import java.sql.Time;
