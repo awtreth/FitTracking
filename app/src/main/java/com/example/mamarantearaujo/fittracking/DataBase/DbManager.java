@@ -51,7 +51,15 @@ public class DbManager {
         return list;
     }
 
-    public String dbTohString(){
+    public ActivityRecord getLastActivityRecord() {
+        Cursor cursor = mDataBase.query(DbSchema.activityTable.NAME, null, null, null, null, null, null);
+        cursor.moveToLast();
+        int activity = cursor.getInt(cursor.getColumnIndex(DbSchema.activityTable.Cols.activityType));
+        long startTime = cursor.getLong(cursor.getColumnIndex(DbSchema.activityTable.Cols.activityTime));
+        return new ActivityRecord(activity, startTime);
+    }
+
+    public String toString(){
         String str = new String();
 
         List<ActivityRecord> list = queryAllActivityRecords();

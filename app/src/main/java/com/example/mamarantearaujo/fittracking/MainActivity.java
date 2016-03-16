@@ -17,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.mamarantearaujo.fittracking.DataBase.DbHelper;
+import com.example.mamarantearaujo.fittracking.DataBase.DbManager;
 import com.example.mamarantearaujo.fittracking.DataBase.DbSchema;
 import com.google.android.gms.location.DetectedActivity;
 
@@ -39,26 +40,10 @@ public class MainActivity extends AppCompatActivity {
     private ImageView mImageView;
     private TextView mTextView;
 
-    SQLiteDatabase mDataBase;
-    static MediaPlayer mMediaPlayer;
+    private DbManager mDataBase;
+    private ActivityRecognitionLab mActivityRecognitionHelper;
+    private MediaPlayer mMediaPlayer;
 
-
-    /*
-    Auxiliar class that store Ids related to each activity
-     */
-    private class ActivityIds {
-        public int imageId;
-        public int textViewId;
-        public int toastMsgId;
-
-        ActivityIds(int imageId, int textViewId, int toastMsgId) {
-            this.imageId = imageId;
-            this.textViewId = textViewId;
-            this.toastMsgId = toastMsgId;
-        }
-    }
-
-    private Map<Integer, ActivityIds> mActivityIds;//Map each activity to its ActivityIds
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,24 +52,19 @@ public class MainActivity extends AppCompatActivity {
 
         activityRecognitionApiClient = new ActivityRecognitionApiClient(this);
 
-        mDataBase = new DbHelper(this).getWritableDatabase();
+        mDataBase = new DbManager(this);
+
+        mActivityRecognitionHelper = new ActivityRecognitionLab(this);
+
 
         mTextView = (TextView) findViewById(R.id.textView);
         mImageView = (ImageView) findViewById(R.id.imageView);
 
-        //Create Hashmap
-        mActivityIds = new HashMap<Integer, ActivityIds>();
-        mActivityIds.put(DetectedActivity.STILL, new ActivityIds(R.drawable.still, R.string.still, R.string.still));
-        mActivityIds.put(DetectedActivity.WALKING, new ActivityIds(R.drawable.walking, R.string.walking, R.string.walked));
-        mActivityIds.put(DetectedActivity.RUNNING, new ActivityIds(R.drawable.running, R.string.running, R.string.run));
-        mActivityIds.put(DetectedActivity.IN_VEHICLE, new ActivityIds(R.drawable.in_vehicle, R.string.in_vehicle, R.string.in_vehicle));
-
-
         //In case of landscape-portrait switch
-        if (savedInstanceState != null) {
-            mLastActivity = savedInstanceState.getInt("Activity");
-            mLastTime = savedInstanceState.getLong("Time");
-        }
+//        if (savedInstanceState != null) {
+//            mLastActivity = savedInstanceState.getInt("Activity");
+//            mLastTime = savedInstanceState.getLong("Time");
+//        }
 
         updateView(mLastActivity);
 
@@ -134,13 +114,9 @@ public class MainActivity extends AppCompatActivity {
                 else if(mLastActivity == DetectedActivity.RUNNING)
                     stopMusic();
 
-                Time startTime = new Time(time);
+                mDataBase.storeActivity(new ActivityRecord(activity, time));
 
-                ContentValues values = new ContentValues();
-                values.put(DbSchema.activityTable.Cols.activityType, activity);
-                values.put(DbSchema.activityTable.Cols.activityTime, startTime.toString());
-
-                mDataBase.insert(DbSchema.activityTable.NAME, null, values);
+                Log.v(TAG,"Just stored: " + mDataBase.getLastActivityRecord().toString());
 
                 mLastActivity = activity;
                 mLastTime = time;
@@ -151,48 +127,19 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        outState.putInt("Activity", mLastActivity);
-        outState.putLong("Time", mLastTime);
+        //outState.putInt("Activity", mLastActivity);
+        //outState.putLong("Time", mLastTime);
         super.onSaveInstanceState(outState);
     }
 
-    /*
-    Auxiliary method
-    Input in milliseconds
-    Output: "[x hour(s)] [y minute(s)] z second(s)"
-     */
-    private String timeToString(long time) {
-        String str = new String(" ");
-
-        time = time / 1000;//milliseconds to seconds
-        Integer hours = (int) (time / 3600);
-        Integer minutes = (int) ((time % 3600) / 60);
-        Integer seconds = (int) time % 60;
-
-        if (hours > 0) {
-            str = str + hours.toString() + " ";
-            str = str + getResources().getQuantityString(R.plurals.hour, hours);
-        }
-        if (minutes > 0) {
-            str = str + " " + minutes.toString() + " ";
-            str = str + getResources().getQuantityString(R.plurals.minute, minutes);
-        }
-        if (seconds > 0) {
-            str = str + " " + seconds.toString() + " ";
-            str = str + getResources().getQuantityString(R.plurals.second, seconds);
-        }
-
-        return str;
-    }
-
-
-    void toastMsg(int activity, long time) {
-        ActivityIds activityIds = mActivityIds.get(activity);//new ActivityIds(activity);
-        Toast.makeText(this, String.format(getString(R.string.toast_msg), getString(activityIds.toastMsgId), timeToString(time)), Toast.LENGTH_SHORT).show();
+    void toastMsg(int activity, long duration) {
+        ActivityIds activityIds = mActivityRecognitionHelper.getActivityIds(activity);//new ActivityIds(activity);
+        Toast.makeText(this, String.format(getString(R.string.toast_msg), getString(activityIds.toastMsgId),
+                mActivityRecognitionHelper.durationToString(duration)), Toast.LENGTH_SHORT).show();
     }
 
     void updateView(int activity) {
-        ActivityIds activityIds = mActivityIds.get(activity);//new ActivityIds(activity);
+        ActivityIds activityIds = mActivityRecognitionHelper.getActivityIds(activity);//new ActivityIds(activity);
         mTextView.setText(String.format(getString(R.string.text_msg), getString(activityIds.textViewId)));
         mImageView.setImageResource(activityIds.imageId);
 
@@ -208,26 +155,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         activityRecognitionApiClient.disconnect();
+        Log.v(TAG, mDataBase.toString());
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
-        Cursor cursor = mDataBase.query(DbSchema.activityTable.NAME, null, null, null, null, null, null);
-
-        cursor.moveToFirst();
-
-        while (!cursor.isAfterLast()) {
-            Integer activity = cursor.getInt(cursor.getColumnIndex(DbSchema.activityTable.Cols.activityType));
-            String timeStr = cursor.getString(cursor.getColumnIndex(DbSchema.activityTable.Cols.activityTime));
-            Log.v(TAG, activity.toString() + " " + timeStr);
-            cursor.moveToNext();
-        }
-        cursor.close();
-
-        mDataBase.close();
+        //mDataBase.close();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
-
         super.onDestroy();
     }
 

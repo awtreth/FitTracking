@@ -74,17 +74,6 @@ public class GoogleMapFragment extends SupportMapFragment implements OnMapReadyC
         }
     }
 
-
-//    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-//        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-//            if (permissions.length == 1 &&
-//                    permissions[0] == Manifest.permission.ACCESS_FINE_LOCATION &&
-//                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//                enableMyLocation();
-//            }
-//        }
-//    }
-
     @Override
     public void onConnected(Bundle bundle) {
         if (ContextCompat.checkSelfPermission(this.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&

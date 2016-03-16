@@ -21,19 +21,18 @@ import java.util.Map;
 public class ActivityRecognitionLab {
 
     private final Context mContext;
-    private static Map<Integer, ActivityIds> mActivityIdMap = null;
+    private final Map<Integer, ActivityIds> mActivityIdMap;
 
     ActivityRecognitionLab(Context context) {
         mContext = context;
 
-        if(mActivityIdMap == null) {
-            HashMap<Integer, ActivityIds> map = new HashMap<>();
-            map.put(DetectedActivity.STILL, new ActivityIds(R.drawable.still, R.string.still, R.string.still));
-            map.put(DetectedActivity.WALKING, new ActivityIds(R.drawable.walking, R.string.walking, R.string.walked));
-            map.put(DetectedActivity.RUNNING, new ActivityIds(R.drawable.running, R.string.running, R.string.run));
-            map.put(DetectedActivity.IN_VEHICLE, new ActivityIds(R.drawable.in_vehicle, R.string.in_vehicle, R.string.in_vehicle));
-            mActivityIdMap = map;
-        }
+        HashMap<Integer, ActivityIds> map = new HashMap<>();
+        map.put(DetectedActivity.STILL, new ActivityIds(R.drawable.still, R.string.still, R.string.still));
+        map.put(DetectedActivity.WALKING, new ActivityIds(R.drawable.walking, R.string.walking, R.string.walked));
+        map.put(DetectedActivity.RUNNING, new ActivityIds(R.drawable.running, R.string.running, R.string.run));
+        map.put(DetectedActivity.IN_VEHICLE, new ActivityIds(R.drawable.in_vehicle, R.string.in_vehicle, R.string.in_vehicle));
+        mActivityIdMap = map;
+
     }
 
     public ActivityIds getActivityIds(int activity) {
@@ -63,7 +62,6 @@ public class ActivityRecognitionLab {
 
         return str;
     }
-
 
 
 }
